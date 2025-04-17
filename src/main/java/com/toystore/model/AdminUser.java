@@ -45,8 +45,6 @@ public class AdminUser extends User {
 
     @Override
     public String toString() {
-        return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
-            getId(), getUsername(), getPassword(), getFullName(), getEmail(),
-            getPhoneNumber(), getAddress(), "ADMIN", getDepartment(), getTitle());
+
     }
 } 
