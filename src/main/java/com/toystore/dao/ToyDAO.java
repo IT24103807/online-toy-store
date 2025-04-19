@@ -8,78 +8,132 @@ import java.util.*;
 import java.text.SimpleDateFormat;
 import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 public class ToyDAO {
-    private static final String TOYS_FILE = "data/toys.txt";
-    private Map<String, Toy> toys;
+    private static final String DATA_DIRECTORY = "data";
+    private static final String TOYS_FILE = DATA_DIRECTORY + "/toys.txt";
+    private final Map<String, Toy> toys;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final Object lock = new Object();
+    private static final Logger LOGGER = Logger.getLogger(ToyDAO.class.getName());
 
     public ToyDAO() {
-        toys = new HashMap<>();
+        toys = new ConcurrentHashMap<>();
+        ensureDataDirectory();
         loadToys();
     }
 
-    private void loadToys() {
-        File file = new File(TOYS_FILE);
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            // Initialize with sample data if file doesn't exist
-            toys = new HashMap<>();
-            for (Toy toy : SampleToyData.getSampleToys()) {
-                toys.put(toy.getId(), toy);
+    private void ensureDataDirectory() {
+        try {
+            Path dataDir = Paths.get(DATA_DIRECTORY);
+            if (!Files.exists(dataDir)) {
+                Files.createDirectories(dataDir);
+                LOGGER.info("Created data directory at: " + dataDir.toAbsolutePath());
             }
-            saveToys();
-            return;
-        }
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                PhysicalToy toy = new PhysicalToy(
-                    parts[0],  // id
-                    parts[1],  // name
-                    parts[2],  // description
-                    parts[3],  // brand
-                    parts[4],  // category
-                    parts[5],  // ageRange
-                    Double.parseDouble(parts[6]),  // price
-                    Integer.parseInt(parts[7]),    // stockQuantity
-                    parts[8],  // imageUrl
-                    parts[9],  // dimensions
-                    Double.parseDouble(parts[10]), // weight
-                    parts[11], // material
-                    Boolean.parseBoolean(parts[12]), // requiresAssembly
-                    Integer.parseInt(parts[13]),     // assemblyTime
-                    Boolean.parseBoolean(parts[14]), // hasBatteries
-                    parts[15], // batteryType
-                    Integer.parseInt(parts[16]),     // minimumAge
-                    Boolean.parseBoolean(parts[17]), // hasWarranty
-                    Integer.parseInt(parts[18])      // warrantyMonths
-                );
-                toy.setActive(Boolean.parseBoolean(parts[19]));
-                toy.setRating(Double.parseDouble(parts[20]));
-                toy.setReviewCount(Integer.parseInt(parts[21]));
-                toys.put(toy.getId(), toy);
+            
+            Path toysFile = Paths.get(TOYS_FILE);
+            if (!Files.exists(toysFile)) {
+                Files.createFile(toysFile);
+                LOGGER.info("Created toys data file at: " + toysFile.toAbsolutePath());
             }
-        } catch (IOException | NumberFormatException e) {
-            e.printStackTrace();
-            // Initialize with sample data if there's an error
-            toys = new HashMap<>();
-            for (Toy toy : SampleToyData.getSampleToys()) {
-                toys.put(toy.getId(), toy);
-            }
-            saveToys();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to create data directory or file", e);
         }
     }
 
-    private void saveToys() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(TOYS_FILE))) {
-            for (Toy toy : toys.values()) {
-                writer.println(toy.toString());
+    private void loadToys() {
+        synchronized (lock) {
+            Path filePath = Paths.get(TOYS_FILE);
+            try {
+                if (Files.size(filePath) == 0) {
+                    LOGGER.info("Toys file is empty, initializing with sample data");
+                    initializeWithSampleData();
+                    return;
+                }
+
+                toys.clear();
+                List<String> lines = Files.readAllLines(filePath);
+                int lineNumber = 0;
+                
+                for (String line : lines) {
+                    lineNumber++;
+                    try {
+                        String[] parts = line.split(",");
+                        if (parts.length < 22) {
+                            LOGGER.warning("Invalid data format at line " + lineNumber + ": " + line);
+                            continue;
+                        }
+                        PhysicalToy toy = new PhysicalToy(
+                            parts[0],  // id
+                            parts[1],  // name
+                            parts[2],  // description
+                            parts[3],  // brand
+                            parts[4],  // category
+                            parts[5],  // ageRange
+                            Double.parseDouble(parts[6]),  // price
+                            Integer.parseInt(parts[7]),    // stockQuantity
+                            parts[8],  // imageUrl
+                            parts[9],  // dimensions
+                            Double.parseDouble(parts[10]), // weight
+                            parts[11], // material
+                            Boolean.parseBoolean(parts[12]), // requiresAssembly
+                            Integer.parseInt(parts[13]),     // assemblyTime
+                            Boolean.parseBoolean(parts[14]), // hasBatteries
+                            parts[15], // batteryType
+                            Integer.parseInt(parts[16]),     // minimumAge
+                            Boolean.parseBoolean(parts[17]), // hasWarranty
+                            Integer.parseInt(parts[18])      // warrantyMonths
+                        );
+                        toy.setActive(Boolean.parseBoolean(parts[19]));
+                        toy.setRating(Double.parseDouble(parts[20]));
+                        toy.setReviewCount(Integer.parseInt(parts[21]));
+                        toys.put(toy.getId(), toy);
+                    } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                        LOGGER.log(Level.WARNING, "Error parsing line " + lineNumber + ": " + line, e);
+                    }
+                }
+                
+                if (toys.isEmpty()) {
+                    LOGGER.info("No valid toys found in file, initializing with sample data");
+                    initializeWithSampleData();
+                } else {
+                    LOGGER.info("Successfully loaded " + toys.size() + " toys from file");
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Error reading toys file", e);
+                initializeWithSampleData();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+    }
+
+    private void initializeWithSampleData() {
+        toys.clear();
+        for (Toy toy : SampleToyData.getSampleToys()) {
+            toys.put(toy.getId(), toy);
+        }
+        saveToys();
+        LOGGER.info("Initialized with sample data");
+    }
+
+    private void saveToys() {
+        synchronized (lock) {
+            Path filePath = Paths.get(TOYS_FILE);
+            try {
+                List<String> lines = new ArrayList<>();
+                for (Toy toy : toys.values()) {
+                    lines.add(toy.toString());
+                }
+                Files.write(filePath, lines, StandardOpenOption.TRUNCATE_EXISTING);
+                LOGGER.info("Successfully saved " + toys.size() + " toys to file");
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Error saving toys to file", e);
+            }
         }
     }
 
@@ -151,48 +205,58 @@ public class ToyDAO {
     }
 
     public boolean addToy(Toy toy) {
-        if (getToyById(toy.getId()) != null) {
-            return false;
+        synchronized (lock) {
+            if (getToyById(toy.getId()) != null) {
+                return false;
+            }
+            toys.put(toy.getId(), toy);
+            saveToys();
+            return true;
         }
-        toys.put(toy.getId(), toy);
-        saveToys();
-        return true;
     }
 
     public boolean updateToy(Toy toy) {
-        if (!toys.containsKey(toy.getId())) {
-            return false;
+        synchronized (lock) {
+            if (!toys.containsKey(toy.getId())) {
+                return false;
+            }
+            toys.put(toy.getId(), toy);
+            saveToys();
+            return true;
         }
-        toys.put(toy.getId(), toy);
-        saveToys();
-        return true;
     }
 
     public boolean deleteToy(String id) {
-        Toy toy = toys.get(id);
-        if (toy != null) {
-            toy.setActive(false);
-            saveToys();
-            return true;
+        synchronized (lock) {
+            Toy toy = toys.get(id);
+            if (toy != null) {
+                toy.setActive(false);
+                saveToys();
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     public boolean updateToyQuantity(String id, int quantity) {
-        Toy toy = toys.get(id);
-        if (toy != null) {
-            toy.setStockQuantity(quantity);
-            saveToys();
-            return true;
+        synchronized (lock) {
+            Toy toy = toys.get(id);
+            if (toy != null) {
+                toy.setStockQuantity(quantity);
+                saveToys();
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     public boolean removeToy(String id) {
-        if (toys.remove(id) != null) {
-            saveToys();
-            return true;
+        synchronized (lock) {
+            if (toys.remove(id) != null) {
+                saveToys();
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 } 

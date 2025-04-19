@@ -1,124 +1,51 @@
 package com.toystore.data;
 
 import com.toystore.model.Toy;
-import com.toystore.model.PhysicalToy;
-import java.util.ArrayList;
+import com.toystore.model.CustomerUser;
+import java.util.Arrays;
 import java.util.List;
 
 public class SampleToyData {
+    private static class SampleToy extends Toy {
+        public SampleToy(String id, String name, String description, String brand, String category,
+                        String ageRange, double price, int stockQuantity, String imageUrl) {
+            super(id, name, description, brand, category, ageRange, price, stockQuantity, imageUrl);
+        }
+
+        @Override
+        public double calculateDiscount(CustomerUser customer) {
+            // Simple discount logic: 10% off for all customers
+            return 0.10;
+        }
+
+        @Override
+        public boolean requiresAssembly() {
+            // Default to false for sample toys
+            return false;
+        }
+
+        @Override
+        public int getMinimumAge() {
+            // Extract minimum age from age range (assuming format like "3-7 years")
+            String ageRange = getAgeRange();
+            if (ageRange != null && ageRange.length() > 0) {
+                try {
+                    return Integer.parseInt(ageRange.split("-")[0].trim());
+                } catch (Exception e) {
+                    return 0;
+                }
+            }
+            return 0;
+        }
+    }
+
     public static List<Toy> getSampleToys() {
-        List<Toy> toys = new ArrayList<>();
-        
-        toys.add(new PhysicalToy(
-            "T001",
-            "LEGO City Police Station",
-            "Build and play with this amazing LEGO City Police Station set!",
-            "LEGO",
-            "Building Sets",
-            "6-12",
-            59.99,
-            20,
-            "images/toys/lego-police.jpg",
-            "12x15x10 inches",
-            2.5,
-            "Plastic",
-            true,
-            30,
-            false,
-            "None",
-            6,
-            true,
-            12
-        ));
-        
-        toys.add(new PhysicalToy(
-            "T002",
-            "Barbie Dreamhouse",
-            "Three-story dreamhouse with pool, elevator, and 8 rooms",
-            "Barbie",
-            "Dolls",
-            "3+",
-            179.99,
-            15,
-            "images/toys/barbie-house.jpg",
-            "30x24x36 inches",
-            15.0,
-            "Plastic",
-            true,
-            45,
-            true,
-            "AA",
-            3,
-            true,
-            24
-        ));
-        
-        toys.add(new PhysicalToy(
-            "T003",
-            "Hot Wheels 20-Car Pack",
-            "Collection of 20 die-cast cars with various designs",
-            "Hot Wheels",
-            "Vehicles",
-            "3+",
-            24.99,
-            50,
-            "images/toys/hot-wheels.jpg",
-            "12x8x2 inches",
-            1.5,
-            "Die-cast metal",
-            false,
-            0,
-            false,
-            "None",
-            3,
-            false,
-            0
-        ));
-        
-        toys.add(new PhysicalToy(
-            "T004",
-            "Nerf Ultra One Blaster",
-            "Motorized Nerf blaster with 25-dart drum",
-            "Nerf",
-            "Action Toys",
-            "8+",
-            49.99,
-            30,
-            "images/toys/nerf-blaster.jpg",
-            "24x12x4 inches",
-            2.0,
-            "Plastic",
-            false,
-            0,
-            true,
-            "C",
-            8,
-            true,
-            12
-        ));
-        
-        toys.add(new PhysicalToy(
-            "T005",
-            "Play-Doh Super Color Pack",
-            "Pack of 20 different colored Play-Doh containers",
-            "Play-Doh",
-            "Arts & Crafts",
-            "3+",
-            19.99,
-            100,
-            "images/toys/play-doh.jpg",
-            "8x8x4 inches",
-            3.0,
-            "Modeling compound",
-            false,
-            0,
-            false,
-            "None",
-            3,
-            false,
-            0
-        ));
-        
-        return toys;
+        return Arrays.asList(
+            new SampleToy("T001", "LEGO Police Station", "Build your own police station with this detailed LEGO set", "LEGO", "Building Sets", "8-12", 79.99, 20, "lego-millennium-falcon.jpg"),
+            new SampleToy("T002", "Barbie Dreamhouse", "A beautiful dreamhouse for Barbie and her friends", "Barbie", "Dolls", "3-10", 199.99, 15, "barbie-dreamhouse.jpg"),
+            new SampleToy("T003", "Hot Wheels Garage", "Race track and garage for your Hot Wheels collection", "Hot Wheels", "Vehicles", "4-8", 49.99, 30, "hot-wheels-garage.jpg"),
+            new SampleToy("T004", "Nerf Blaster", "High-performance foam dart blaster", "Nerf", "Action Toys", "8-14", 29.99, 25, "toy-placeholder.jpg"),
+            new SampleToy("T005", "Play-Doh Kitchen", "Creative playset with various Play-Doh tools", "Play-Doh", "Arts & Crafts", "3-6", 34.99, 40, "toy-placeholder.jpg")
+        );
     }
 } 

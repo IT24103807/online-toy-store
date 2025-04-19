@@ -80,8 +80,9 @@
                                     <c:forEach items="${toys}" var="toy">
                                         <tr>
                                             <td>
-                                                <img src="${toy.imageUrl}" alt="${toy.name}" 
-                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                                <img src="${pageContext.request.contextPath}/images/${toy.imageUrl}" 
+                                                     alt="${toy.name}" 
+                                                     style="width: 50px; height: 50px; object-fit: contain;">
                                             </td>
                                             <td>${toy.name}</td>
                                             <td>${toy.brand}</td>
@@ -121,7 +122,8 @@
                     <h5 class="modal-title">Add New Product</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="${pageContext.request.contextPath}/admin/toys" method="post">
+                <form action="${pageContext.request.contextPath}/admin/toys" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="add">
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6">
@@ -150,8 +152,26 @@
                                     <input type="number" class="form-control" name="stockQuantity" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Image URL</label>
-                                    <input type="url" class="form-control" name="imageUrl" required>
+                                    <label class="form-label">Product Image</label>
+                                    <div class="mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="imageType" id="imageUpload" value="upload" checked>
+                                            <label class="form-check-label" for="imageUpload">Upload Image</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="imageType" id="imageUrl" value="url">
+                                            <label class="form-check-label" for="imageUrl">Image URL</label>
+                                        </div>
+                                    </div>
+                                    <div id="uploadSection">
+                                        <input type="file" class="form-control" name="image" accept="image/*">
+                                        <div class="mt-2">
+                                            <img id="newImagePreview" style="max-width: 200px; max-height: 200px; display: none;">
+                                        </div>
+                                    </div>
+                                    <div id="urlSection" style="display: none;">
+                                        <input type="url" class="form-control" name="imageUrl" placeholder="Enter image URL">
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -241,6 +261,77 @@
                 form.submit();
             }
         }
+
+        // Handle image type selection
+        document.querySelectorAll('input[name="imageType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const uploadSection = document.getElementById('uploadSection');
+                const urlSection = document.getElementById('urlSection');
+                if (this.value === 'upload') {
+                    uploadSection.style.display = 'block';
+                    urlSection.style.display = 'none';
+                } else {
+                    uploadSection.style.display = 'none';
+                    urlSection.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle image preview
+        document.querySelector('input[name="image"]').addEventListener('change', function(e) {
+            const preview = document.getElementById('newImagePreview');
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const imageType = document.querySelector('input[name="imageType"]:checked').value;
+            
+            if (imageType === 'upload') {
+                const imageFile = document.querySelector('input[name="image"]').files[0];
+                if (imageFile) {
+                    try {
+                        // Upload the image first
+                        const uploadFormData = new FormData();
+                        uploadFormData.append('image', imageFile);
+                        
+                        const response = await fetch('${pageContext.request.contextPath}/admin/toys/upload-image', {
+                            method: 'POST',
+                            body: uploadFormData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Image upload failed');
+                        }
+                        
+                        const imageFileName = await response.text();
+                        formData.set('imageUrl', imageFileName);
+                        
+                        // Submit the main form
+                        this.submit();
+                    } catch (error) {
+                        alert('Error uploading image: ' + error.message);
+                    }
+                } else {
+                    alert('Please select an image file');
+                }
+            } else {
+                // If using URL, just submit the form
+                this.submit();
+            }
+        });
     </script>
 </body>
 </html> 

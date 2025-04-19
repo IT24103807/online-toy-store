@@ -103,9 +103,13 @@
                             <c:forEach var="toy" items="${toys}">
                                 <div class="col-md-4 mb-4">
                                     <div class="card h-100">
-                                        <img src="${pageContext.request.contextPath}/${toy.imageUrl}" 
-                                             class="card-img-top" alt="${toy.name}"
-                                             style="height: 200px; object-fit: contain; padding: 1rem;">
+                                        <div class="toy-image" style="height: 200px; overflow: hidden;">
+                                            <img src="${pageContext.request.contextPath}/images/${toy.imageUrl}" 
+                                                 alt="${toy.name}" 
+                                                 class="img-fluid"
+                                                 style="width: 100%; height: 100%; object-fit: cover;"
+                                                 onerror="this.src='${pageContext.request.contextPath}/images/toy-placeholder.jpg'">
+                                        </div>
                                         <div class="card-body">
                                             <h5 class="card-title">${toy.name}</h5>
                                             <p class="card-text">${toy.description}</p>
