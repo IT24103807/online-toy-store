@@ -23,26 +23,67 @@ public class OrderItem {
     }
 
     // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
 
-    public String getToyId() { return toyId; }
-    public void setToyId(String toyId) { this.toyId = toyId; }
 
-    public String getToyName() { return toyName; }
-    public void setToyName(String toyName) { this.toyName = toyName; }
+    public String getOrderId() {
+        return orderId;
+    }
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
 
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
 
-    public double getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
 
-    public double getDiscount() { return discount; }
-    public void setDiscount(double discount) { this.discount = discount; }
+    public String getToyId() {
+        return toyId;
+    }
+    public void setToyId(String toyId) {
+        this.toyId = toyId;
+    }
+
+
+
+    public String getToyName() {
+        return toyName;
+    }
+    public void setToyName(String toyName) {
+        this.toyName = toyName;
+    }
+
+
+
+    public int getQuantity() {
+        return quantity;
+    }
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+
+
+    public double getUnitPrice() {
+        return unitPrice;
+    }
+    public void setUnitPrice(double unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+
+
+    public double getDiscount() {
+        return discount;
+    }
+    public void setDiscount(double discount) {
+        this.discount = discount;
+    }
+
 
     // Business logic methods
     public double getSubtotal() {
