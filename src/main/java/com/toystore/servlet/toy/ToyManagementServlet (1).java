@@ -21,12 +21,12 @@ import java.util.UUID;
 
 @WebServlet("/toys/*")
 public class ToyManagementServlet extends HttpServlet {
-    private ToyDAO toyDAO;
+    private ToyDAO toyD;
     private Gson gson;
 
     @Override
     public void init() throws ServletException {
-        toyDAO = ToyDAO.getInstance();
+        toyD = ToyDAO.getInstance();
         gson = new Gson();
     }
 
@@ -44,15 +44,15 @@ public class ToyManagementServlet extends HttpServlet {
 
             List<Toy> toys;
             if (searchTerm != null && !searchTerm.isEmpty()) {
-                toys = toyDAO.searchToys(searchTerm);
+                toys = toyD.searchToys(searchTerm);
             } else if (category != null && !category.isEmpty()) {
-                toys = toyDAO.getToysByCategory(category);
+                toys = toyD.getToysByCategory(category);
             } else if (brand != null && !brand.isEmpty()) {
-                toys = toyDAO.getToysByBrand(brand);
+                toys = toyD.getToysByBrand(brand);
             } else if (ageRange != null && !ageRange.isEmpty()) {
-                toys = toyDAO.getToysByAgeRange(ageRange);
+                toys = toyD.getToysByAgeRange(ageRange);
             } else {
-                toys = toyDAO.getAllToys();
+                toys = toyD.getAllToys();
             }
 
             request.setAttribute("toys", toys);
@@ -60,7 +60,7 @@ public class ToyManagementServlet extends HttpServlet {
         } else {
             // Get specific toy
             String toyId = pathInfo.substring(1);
-            Toy toy = toyDAO.getToyById(toyId);
+            Toy toy = toyD.getToyById(toyId);
             
             if (toy != null) {
                 // Get review data
@@ -112,7 +112,7 @@ public class ToyManagementServlet extends HttpServlet {
                 request.getParameter("imageUrl")
             );
 
-            if (toyDAO.addToy(toy)) {
+            if (toyD.addToy(toy)) {
                 response.sendRedirect(request.getContextPath() + "/toys");
             } else {
                 request.setAttribute("error", "Failed to add toy");
@@ -134,7 +134,7 @@ public class ToyManagementServlet extends HttpServlet {
         Toy toy = gson.fromJson(request.getReader(), PhysicalToy.class);
         toy.setId(toyId);
         
-        if (toyDAO.updateToy(toy)) {
+        if (toyD.updateToy(toy)) {
             response.setStatus(HttpServletResponse.SC_OK);
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -151,7 +151,7 @@ public class ToyManagementServlet extends HttpServlet {
         }
 
         String toyId = pathInfo.substring(1);
-        if (toyDAO.deleteToy(toyId)) {
+        if (toyD.deleteToy(toyId)) {
             response.setStatus(HttpServletResponse.SC_OK);
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
