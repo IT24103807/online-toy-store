@@ -1,0 +1,4 @@
+1|user1|User One|user1@example.com|password1|USER
+2|user2|User Two|user2@example.com|password2|USER
+3|user3|User Three|user3@example.com|password3|USER
+4|user4|User Four|user4@example.com|user1212|USER

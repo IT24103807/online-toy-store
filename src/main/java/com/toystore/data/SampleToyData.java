@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SampleToyData {
-    private static class SampleToy extends Toy {
+    public static class SampleToy extends Toy {
         public SampleToy(String id, String name, String description, String brand, String category,
                         String ageRange, double price, int stockQuantity, String imageUrl) {
             super(id, name, description, brand, category, ageRange, price, stockQuantity, imageUrl);
@@ -37,6 +37,11 @@ public class SampleToyData {
             }
             return 0;
         }
+    }
+
+    public static Toy createSampleToy(String id, String name, String description, String brand, String category,
+                                    String ageRange, double price, int stockQuantity, String imageUrl) {
+        return new SampleToy(id, name, description, brand, category, ageRange, price, stockQuantity, imageUrl);
     }
 
     public static List<Toy> getSampleToys() {

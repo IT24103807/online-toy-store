@@ -1,7 +1,14 @@
 package com.toystore.servlet.user;
 
+import com.google.gson.Gson;
 import com.toystore.dao.UserDAO;
+import com.toystore.dao.ToyDAO;
+import com.toystore.dao.OrderDAO;
 import com.toystore.model.User;
+import com.toystore.model.Order;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,10 +21,16 @@ import java.io.IOException;
 @WebServlet("/dashboard/*")
 public class DashboardServlet extends HttpServlet {
     private UserDAO userDAO;
+    private ToyDAO toyDAO;
+    private OrderDAO orderDAO;
+    private Gson gson;
 
     @Override
     public void init() throws ServletException {
-        userDAO = new UserDAO();
+        userDAO = UserDAO.getInstance();
+        toyDAO = ToyDAO.getInstance();
+        orderDAO = OrderDAO.getInstance();
+        gson = new Gson();
     }
 
     @Override
@@ -30,6 +43,27 @@ public class DashboardServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+
+        String pathInfo = request.getPathInfo();
+        if (pathInfo != null && pathInfo.equals("/stats")) {
+            // Handle AJAX request for statistics
+            response.setContentType("application/json");
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalToys", toyDAO.getActiveToyCount());
+            stats.put("lowStockCount", toyDAO.getLowStockToys(5).size());
+            stats.put("newArrivalsCount", toyDAO.getNewArrivals(5).size());
+            response.getWriter().write(gson.toJson(stats));
+            return;
+        }
+        
+        // Add toy statistics to the request
+        request.setAttribute("totalToys", toyDAO.getActiveToyCount());
+        request.setAttribute("lowStockToys", toyDAO.getLowStockToys(5));
+        request.setAttribute("newArrivals", toyDAO.getNewArrivals(5));
+        
+        // Load user's orders
+        List<Order> orders = orderDAO.getOrdersByUserId(user.getId());
+        request.setAttribute("orders", orders);
         
         request.getRequestDispatcher("/dashboard.jsp").forward(request, response);
     }

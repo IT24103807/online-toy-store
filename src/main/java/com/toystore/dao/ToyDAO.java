@@ -1,11 +1,11 @@
 package com.toystore.dao;
 
-import com.toystore.data.SampleToyData;
 import com.toystore.model.Toy;
 import com.toystore.model.PhysicalToy;
 import java.io.*;
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -22,11 +22,19 @@ public class ToyDAO {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final Object lock = new Object();
     private static final Logger LOGGER = Logger.getLogger(ToyDAO.class.getName());
+    private static ToyDAO instance;
 
-    public ToyDAO() {
+    private ToyDAO() {
         toys = new ConcurrentHashMap<>();
         ensureDataDirectory();
         loadToys();
+    }
+
+    public static ToyDAO getInstance() {
+        if (instance == null) {
+            instance = new ToyDAO();
+        }
+        return instance;
     }
 
     private void ensureDataDirectory() {
@@ -52,8 +60,7 @@ public class ToyDAO {
             Path filePath = Paths.get(TOYS_FILE);
             try {
                 if (Files.size(filePath) == 0) {
-                    LOGGER.info("Toys file is empty, initializing with sample data");
-                    initializeWithSampleData();
+                    LOGGER.info("Toys file is empty, starting with no toys");
                     return;
                 }
 
@@ -65,7 +72,7 @@ public class ToyDAO {
                     lineNumber++;
                     try {
                         String[] parts = line.split(",");
-                        if (parts.length < 22) {
+                        if (parts.length < 9) {
                             LOGGER.warning("Invalid data format at line " + lineNumber + ": " + line);
                             continue;
                         }
@@ -78,47 +85,24 @@ public class ToyDAO {
                             parts[5],  // ageRange
                             Double.parseDouble(parts[6]),  // price
                             Integer.parseInt(parts[7]),    // stockQuantity
-                            parts[8],  // imageUrl
-                            parts[9],  // dimensions
-                            Double.parseDouble(parts[10]), // weight
-                            parts[11], // material
-                            Boolean.parseBoolean(parts[12]), // requiresAssembly
-                            Integer.parseInt(parts[13]),     // assemblyTime
-                            Boolean.parseBoolean(parts[14]), // hasBatteries
-                            parts[15], // batteryType
-                            Integer.parseInt(parts[16]),     // minimumAge
-                            Boolean.parseBoolean(parts[17]), // hasWarranty
-                            Integer.parseInt(parts[18])      // warrantyMonths
+                            parts[8]   // imageUrl
                         );
-                        toy.setActive(Boolean.parseBoolean(parts[19]));
-                        toy.setRating(Double.parseDouble(parts[20]));
-                        toy.setReviewCount(Integer.parseInt(parts[21]));
+                        toy.setAddedDate(dateFormat.parse(parts[9]));
+                        toy.setLastModifiedDate(dateFormat.parse(parts[10]));
+                        toy.setActive(Boolean.parseBoolean(parts[11]));
+                        toy.setRating(Double.parseDouble(parts[12]));
+                        toy.setReviewCount(Integer.parseInt(parts[13]));
                         toys.put(toy.getId(), toy);
-                    } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    } catch (NumberFormatException | ArrayIndexOutOfBoundsException | ParseException e) {
                         LOGGER.log(Level.WARNING, "Error parsing line " + lineNumber + ": " + line, e);
                     }
                 }
                 
-                if (toys.isEmpty()) {
-                    LOGGER.info("No valid toys found in file, initializing with sample data");
-                    initializeWithSampleData();
-                } else {
-                    LOGGER.info("Successfully loaded " + toys.size() + " toys from file");
-                }
+                LOGGER.info("Successfully loaded " + toys.size() + " toys from file");
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Error reading toys file", e);
-                initializeWithSampleData();
             }
         }
-    }
-
-    private void initializeWithSampleData() {
-        toys.clear();
-        for (Toy toy : SampleToyData.getSampleToys()) {
-            toys.put(toy.getId(), toy);
-        }
-        saveToys();
-        LOGGER.info("Initialized with sample data");
     }
 
     private void saveToys() {
@@ -142,7 +126,9 @@ public class ToyDAO {
     }
 
     public List<Toy> getAllToys() {
-        return new ArrayList<>(toys.values());
+        return toys.values().stream()
+            .filter(Toy::isActive)
+            .collect(Collectors.toList());
     }
 
     public List<Toy> searchToys(String searchQuery) {
@@ -204,13 +190,27 @@ public class ToyDAO {
             .collect(Collectors.toList());
     }
 
+    public int getActiveToyCount() {
+        synchronized (lock) {
+            int count = (int) toys.values().stream()
+                .filter(Toy::isActive)
+                .count();
+            LOGGER.info("Current active toy count: " + count);
+            return count;
+        }
+    }
+
     public boolean addToy(Toy toy) {
         synchronized (lock) {
             if (getToyById(toy.getId()) != null) {
+                LOGGER.warning("Failed to add toy: ID already exists - " + toy.getId());
                 return false;
             }
+            toy.setActive(true); // Ensure new toys are active
             toys.put(toy.getId(), toy);
             saveToys();
+            LOGGER.info("Successfully added new toy: " + toy.getName() + " (ID: " + toy.getId() + ")");
+            LOGGER.info("New total active toy count: " + getActiveToyCount());
             return true;
         }
     }
@@ -218,10 +218,33 @@ public class ToyDAO {
     public boolean updateToy(Toy toy) {
         synchronized (lock) {
             if (!toys.containsKey(toy.getId())) {
+                LOGGER.warning("Failed to update toy: ID not found - " + toy.getId());
                 return false;
             }
-            toys.put(toy.getId(), toy);
+            
+            // Get the existing toy
+            Toy existingToy = toys.get(toy.getId());
+            
+            // Update only the changed properties
+            existingToy.setName(toy.getName());
+            existingToy.setDescription(toy.getDescription());
+            existingToy.setBrand(toy.getBrand());
+            existingToy.setCategory(toy.getCategory());
+            existingToy.setPrice(toy.getPrice());
+            existingToy.setStockQuantity(toy.getStockQuantity());
+            existingToy.setActive(toy.isActive());
+            
+            // Only update image if it's different
+            if (toy.getImageUrl() != null && !toy.getImageUrl().equals(existingToy.getImageUrl())) {
+                existingToy.setImageUrl(toy.getImageUrl());
+            }
+            
+            // Update last modified date
+            existingToy.setLastModifiedDate(new Date());
+            
             saveToys();
+            LOGGER.info("Successfully updated toy: " + toy.getName() + " (ID: " + toy.getId() + ")");
+            LOGGER.info("Current active toy count: " + getActiveToyCount());
             return true;
         }
     }
@@ -232,8 +255,11 @@ public class ToyDAO {
             if (toy != null) {
                 toy.setActive(false);
                 saveToys();
+                LOGGER.info("Successfully deactivated toy: " + toy.getName() + " (ID: " + id + ")");
+                LOGGER.info("Current active toy count: " + getActiveToyCount());
                 return true;
             }
+            LOGGER.warning("Failed to delete toy: ID not found - " + id);
             return false;
         }
     }

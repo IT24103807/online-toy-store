@@ -29,6 +29,11 @@
                         <a class="nav-link" href="${pageContext.request.contextPath}/admin/toys">Products</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/categories">
+                            <i class="fas fa-tags me-1"></i>Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="${pageContext.request.contextPath}/admin/orders">Orders</a>
                     </li>
                     <li class="nav-item">

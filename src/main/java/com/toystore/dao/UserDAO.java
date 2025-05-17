@@ -10,33 +10,48 @@ import java.util.stream.Collectors;
 public class UserDAO {
     private static final String USERS_FILE = System.getProperty("user.dir") + File.separator + "data" + File.separator + "users.txt";
     private Map<String, User> users;
+    private static UserDAO instance;
 
-    public UserDAO() {
+    private UserDAO() {
         users = new HashMap<>();
         loadUsers();
+    }
+
+    public static UserDAO getInstance() {
+        if (instance == null) {
+            instance = new UserDAO();
+        }
+        return instance;
     }
 
     private void loadUsers() {
         File file = new File(USERS_FILE);
         if (!file.exists()) {
             file.getParentFile().mkdirs();
-            // Create default admin user
-            AdminUser adminUser = new AdminUser(
-                UUID.randomUUID().toString(),
-                "admin",
-                "admin",
-                "Administrator",
-                "admin@toystore.com",
-                "",  // phone
-                "",  // address
-                "default-avatar.jpg",
-                "IT",  // department
-                "System Administrator"  // title
-            );
-            users.put(adminUser.getId(), adminUser);
-            saveUsers();
-            System.out.println("Created default admin user: admin/admin at " + USERS_FILE);
-            return;
+            try {
+                file.createNewFile();
+                // Create default admin user
+                AdminUser adminUser = new AdminUser(
+                    UUID.randomUUID().toString(),
+                    "admin",
+                    "admin123",  // Changed default password to be more secure
+                    "Administrator",
+                    "admin@toystore.com",
+                    "",  // phone
+                    "",  // address
+                    "default-avatar.jpg",
+                    "IT",  // department
+                    "System Administrator"  // title
+                );
+                adminUser.setActive(true);  // Ensure admin is active
+                users.put(adminUser.getId(), adminUser);
+                saveUsers();
+                System.out.println("Created default admin user: admin/admin123 at " + USERS_FILE);
+                return;
+            } catch (IOException e) {
+                System.err.println("Error creating users file: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -167,16 +182,31 @@ public class UserDAO {
     public boolean deleteUser(String id) {
         User user = users.get(id);
         if (user != null) {
-            user.setActive(false);
+            users.remove(id);
             saveUsers();
             return true;
         }
         return false;
     }
 
+    public boolean updatePassword(String userId, String newPassword) {
+        User user = users.get(userId);
+        if (user == null) {
+            return false;
+        }
+        user.setPassword(newPassword);
+        saveUsers();
+        return true;
+    }
+
     public boolean authenticate(String username, String password) {
         User user = getUserByUsername(username);
-        return user != null && user.getPassword().equals(password) && user.isActive();
+        if (user == null || !user.isActive()) {
+            return false;
+        }
+        // For security, we should hash passwords in production
+        // But for this demo, we'll keep it simple
+        return user.getPassword().equals(password);
     }
 
     public List<AdminUser> getAllAdmins() {
@@ -193,23 +223,8 @@ public class UserDAO {
             .collect(Collectors.toList());
     }
 
-    public boolean validateUser(String username, String password) {
-        User user = getUserByUsername(username);
-        return user != null && user.getPassword().equals(password) && user.isActive();
-    }
-
     public boolean verifyPassword(String userId, String password) {
-        User user = getUserById(userId);
+        User user = users.get(userId);
         return user != null && user.getPassword().equals(password);
-    }
-
-    public boolean updatePassword(String userId, String newPassword) {
-        User user = getUserById(userId);
-        if (user != null) {
-            user.setPassword(newPassword);
-            saveUsers();
-            return true;
-        }
-        return false;
     }
 } 

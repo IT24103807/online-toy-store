@@ -8,6 +8,17 @@
     <title>Product Management - Toy Store Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .modal-dialog {
+            max-width: 600px;
+        }
+        .toy-image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -58,7 +69,7 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Product Management</h5>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addToyModal">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#toyModal">
                             <i class="fas fa-plus"></i> Add Product
                         </button>
                     </div>
@@ -73,14 +84,15 @@
                                         <th>Category</th>
                                         <th>Price</th>
                                         <th>Stock</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <c:forEach items="${toys}" var="toy">
-                                        <tr>
+                                        <tr data-toy-id="${toy.id}">
                                             <td>
-                                                <img src="${pageContext.request.contextPath}/images/${toy.imageUrl}" 
+                                                <img src="${pageContext.request.contextPath}/uploads/toys/${toy.imageUrl}" 
                                                      alt="${toy.name}" 
                                                      style="width: 50px; height: 50px; object-fit: contain;">
                                             </td>
@@ -94,10 +106,15 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="${pageContext.request.contextPath}/admin/toys/${toy.id}" 
-                                                   class="btn btn-sm btn-primary">
+                                                <span class="badge bg-${toy.active ? 'success' : 'secondary'}">
+                                                    ${toy.active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" 
+                                                        onclick="editToy('${toy.id}', '${toy.name}', '${toy.description}', '${toy.brand}', '${toy.category}', '${toy.price}', '${toy.stockQuantity}', '${toy.imageUrl}', '${toy.active}', '${toy.ageRange}')">
                                                     <i class="fas fa-edit"></i>
-                                                </a>
+                                                </button>
                                                 <button class="btn btn-sm btn-danger" 
                                                         onclick="deleteToy('${toy.id}')">
                                                     <i class="fas fa-trash"></i>
@@ -114,123 +131,71 @@
         </div>
     </div>
 
-    <!-- Add Product Modal -->
-    <div class="modal fade" id="addToyModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+    <!-- Add/Edit Product Modal -->
+    <div class="modal fade" id="toyModal" tabindex="-1" aria-labelledby="toyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New Product</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="toyModalLabel">Add New Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="${pageContext.request.contextPath}/admin/toys" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="add">
+                <form action="${pageContext.request.contextPath}/admin/toys" method="post" enctype="multipart/form-data" id="toyForm">
+                    <input type="hidden" name="action" id="formAction" value="add">
+                    <input type="hidden" name="id" id="toyId">
                     <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Name</label>
-                                    <input type="text" class="form-control" name="name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Brand</label>
-                                    <input type="text" class="form-control" name="brand" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Category</label>
-                                    <input type="text" class="form-control" name="category" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Age Range</label>
-                                    <input type="text" class="form-control" name="ageRange" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Price</label>
-                                    <input type="number" step="0.01" class="form-control" name="price" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Stock Quantity</label>
-                                    <input type="number" class="form-control" name="stockQuantity" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Product Image</label>
-                                    <div class="mb-2">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="imageType" id="imageUpload" value="upload" checked>
-                                            <label class="form-check-label" for="imageUpload">Upload Image</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="imageType" id="imageUrl" value="url">
-                                            <label class="form-check-label" for="imageUrl">Image URL</label>
-                                        </div>
-                                    </div>
-                                    <div id="uploadSection">
-                                        <input type="file" class="form-control" name="image" accept="image/*">
-                                        <div class="mt-2">
-                                            <img id="newImagePreview" style="max-width: 200px; max-height: 200px; display: none;">
-                                        </div>
-                                    </div>
-                                    <div id="urlSection" style="display: none;">
-                                        <input type="url" class="form-control" name="imageUrl" placeholder="Enter image URL">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Description</label>
-                                    <textarea class="form-control" name="description" rows="3" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Dimensions</label>
-                                    <input type="text" class="form-control" name="dimensions" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Weight (kg)</label>
-                                    <input type="number" step="0.01" class="form-control" name="weight" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Material</label>
-                                    <input type="text" class="form-control" name="material" required>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="requiresAssembly" id="requiresAssembly">
-                                        <label class="form-check-label" for="requiresAssembly">Requires Assembly</label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Assembly Time (minutes)</label>
-                                    <input type="number" class="form-control" name="assemblyTime" value="0">
-                                </div>
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="hasBatteries" id="hasBatteries">
-                                        <label class="form-check-label" for="hasBatteries">Requires Batteries</label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Battery Type</label>
-                                    <input type="text" class="form-control" name="batteryType">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Minimum Age</label>
-                                    <input type="number" class="form-control" name="minimumAge" required>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="hasWarranty" id="hasWarranty">
-                                        <label class="form-check-label" for="hasWarranty">Has Warranty</label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Warranty Months</label>
-                                    <input type="number" class="form-control" name="warrantyMonths" value="0">
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <c:forEach var="cat" items="${categories}">
+                                    <option value="${cat.name}">${cat.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stockQuantity" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Product Image</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*" onchange="previewImage(this)">
+                            <img id="imagePreview" class="toy-image-preview" alt="Preview">
+                            <input type="hidden" id="currentImage" name="currentImage">
+                        </div>
+                        <div class="mb-3">
+                            <label for="isActive" class="form-label">Status</label>
+                            <select class="form-control" id="isActive" name="isActive">
+                                <option value="true" selected>Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ageRange" class="form-label">Age Range</label>
+                            <select class="form-select" id="ageRange" name="ageRange" required>
+                                <option value="">Select Age Range</option>
+                                <option value="0-2">0-2 years</option>
+                                <option value="3-5">3-5 years</option>
+                                <option value="6-8">6-8 years</option>
+                                <option value="9-11">9-11 years</option>
+                                <option value="12+">12+ years</option>
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Product</button>
+                        <button type="submit" class="btn btn-primary">Save Product</button>
                     </div>
                 </form>
             </div>
@@ -240,96 +205,107 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function deleteToy(toyId) {
-            if (confirm('Are you sure you want to delete this product?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '${pageContext.request.contextPath}/admin/toys';
-                
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'delete';
-                
-                const toyIdInput = document.createElement('input');
-                toyIdInput.type = 'hidden';
-                toyIdInput.name = 'toyId';
-                toyIdInput.value = toyId;
-                
-                form.appendChild(actionInput);
-                form.appendChild(toyIdInput);
-                document.body.appendChild(form);
-                form.submit();
+            if (confirm('Are you sure you want to delete this toy?')) {
+                fetch('${pageContext.request.contextPath}/admin/toys/delete?id=' + toyId, {
+                    method: 'POST'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Refresh the page after successful deletion
+                        window.location.reload();
+                    } else {
+                        showAlert('Failed to delete toy. Please try again.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while deleting the toy.', 'danger');
+                });
             }
         }
 
-        // Handle image type selection
-        document.querySelectorAll('input[name="imageType"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const uploadSection = document.getElementById('uploadSection');
-                const urlSection = document.getElementById('urlSection');
-                if (this.value === 'upload') {
-                    uploadSection.style.display = 'block';
-                    urlSection.style.display = 'none';
-                } else {
-                    uploadSection.style.display = 'none';
-                    urlSection.style.display = 'block';
-                }
-            });
-        });
+        function editToy(toyId, name, description, brand, category, price, stockQuantity, imageUrl, isActive, ageRange) {
+            const modal = new bootstrap.Modal(document.getElementById('toyModal'));
+            document.getElementById('toyModalLabel').textContent = 'Edit Product';
+            document.getElementById('toyId').value = toyId;
+            document.getElementById('name').value = name;
+            document.getElementById('description').value = description;
+            document.getElementById('category').value = category;
+            document.getElementById('price').value = price;
+            document.getElementById('stockQuantity').value = stockQuantity;
+            document.getElementById('currentImage').value = imageUrl;
+            document.getElementById('isActive').value = isActive;
+            if (ageRange && document.getElementById('ageRange')) {
+                document.getElementById('ageRange').value = ageRange;
+            }
+            document.getElementById('formAction').value = 'update';
+            
+            // Clear the file input
+            document.getElementById('image').value = '';
+            
+            // Show current image if exists
+            if (imageUrl) {
+                document.getElementById('imagePreview').src = '${pageContext.request.contextPath}/uploads/toys/' + imageUrl;
+                document.getElementById('imagePreview').style.display = 'block';
+            } else {
+                document.getElementById('imagePreview').style.display = 'none';
+            }
+            
+            modal.show();
+        }
 
-        // Handle image preview
-        document.querySelector('input[name="image"]').addEventListener('change', function(e) {
-            const preview = document.getElementById('newImagePreview');
-            if (e.target.files && e.target.files[0]) {
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const currentImage = document.getElementById('currentImage');
+            
+            if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
+                    // Clear the current image value when a new image is selected
+                    currentImage.value = '';
                 }
-                reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(input.files[0]);
+            } else if (currentImage.value) {
+                // If no new file selected but there's a current image, show it
+                preview.src = '${pageContext.request.contextPath}/uploads/toys/' + currentImage.value;
+                preview.style.display = 'block';
             } else {
                 preview.style.display = 'none';
             }
+        }
+
+        // Reset form when modal is closed
+        document.getElementById('toyModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('toyForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('toyModalLabel').textContent = 'Add New Product';
+            document.getElementById('formAction').value = 'add';
+            document.getElementById('toyId').value = '';
+            document.getElementById('currentImage').value = '';
         });
 
         // Handle form submission
-        document.querySelector('form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        document.getElementById('toyForm').addEventListener('submit', function(e) {
+            const action = document.getElementById('formAction').value;
+            const toyId = document.getElementById('toyId').value;
             
-            const formData = new FormData(this);
-            const imageType = document.querySelector('input[name="imageType"]:checked').value;
+            if (action === 'update' && !toyId) {
+                e.preventDefault();
+                showAlert('Invalid toy ID for update', 'danger');
+                return;
+            }
             
-            if (imageType === 'upload') {
-                const imageFile = document.querySelector('input[name="image"]').files[0];
-                if (imageFile) {
-                    try {
-                        // Upload the image first
-                        const uploadFormData = new FormData();
-                        uploadFormData.append('image', imageFile);
-                        
-                        const response = await fetch('${pageContext.request.contextPath}/admin/toys/upload-image', {
-                            method: 'POST',
-                            body: uploadFormData
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error('Image upload failed');
-                        }
-                        
-                        const imageFileName = await response.text();
-                        formData.set('imageUrl', imageFileName);
-                        
-                        // Submit the main form
-                        this.submit();
-                    } catch (error) {
-                        alert('Error uploading image: ' + error.message);
-                    }
-                } else {
-                    alert('Please select an image file');
+            // Validate required fields
+            const requiredFields = ['name', 'description', 'brand', 'category', 'price', 'stockQuantity'];
+            for (const field of requiredFields) {
+                const input = document.getElementById(field);
+                if (!input.value.trim()) {
+                    e.preventDefault();
+                    showAlert(`Please fill in the ${field} field`, 'danger');
+                    return;
                 }
-            } else {
-                // If using URL, just submit the form
-                this.submit();
             }
         });
     </script>

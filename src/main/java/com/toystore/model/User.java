@@ -51,6 +51,7 @@ public abstract class User {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

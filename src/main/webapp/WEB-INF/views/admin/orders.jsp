@@ -85,17 +85,17 @@
                                 </thead>
                                 <tbody>
                                     <c:forEach items="${orders}" var="order">
-                                        <tr data-status="${order.status}">
+                                        <tr data-status="${order.orderStatus}">
                                             <td>${order.id}</td>
-                                            <td>${order.user.fullName}</td>
+                                            <td>${order.user != null ? order.user.fullName : 'Unknown User'}</td>
                                             <td><fmt:formatDate value="${order.orderDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
                                             <td>$${order.totalAmount}</td>
                                             <td>
-                                                <span class="badge bg-${order.status == 'PENDING' ? 'warning' : 
-                                                                      order.status == 'PROCESSING' ? 'info' :
-                                                                      order.status == 'SHIPPED' ? 'primary' :
-                                                                      order.status == 'DELIVERED' ? 'success' : 'danger'}">
-                                                    ${order.status}
+                                                <span class="badge bg-${order.orderStatus == 'PENDING' ? 'warning' : 
+                                                                      order.orderStatus == 'PROCESSING' ? 'info' :
+                                                                      order.orderStatus == 'SHIPPED' ? 'primary' :
+                                                                      order.orderStatus == 'DELIVERED' ? 'success' : 'danger'}">
+                                                    ${order.orderStatus}
                                                 </span>
                                             </td>
                                             <td>

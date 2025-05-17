@@ -13,12 +13,20 @@ public class OrderDAO {
     private Map<String, Order> orders;
     private Map<String, List<OrderItem>> orderItems;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static OrderDAO instance;
 
-    public OrderDAO() {
+    private OrderDAO() {
         orders = new HashMap<>();
         orderItems = new HashMap<>();
         loadOrders();
         loadOrderItems();
+    }
+
+    public static OrderDAO getInstance() {
+        if (instance == null) {
+            instance = new OrderDAO();
+        }
+        return instance;
     }
 
     private void loadOrders() {
@@ -37,8 +45,6 @@ public class OrderDAO {
                     parts[1],  // userId
                     parts[7],  // shippingAddress
                     parts[8],  // paymentMethod
-                    Boolean.parseBoolean(parts[14]), // isGiftWrapped
-                    parts[15], // giftMessage
                     parts[17]  // couponCode
                 );
                 order.setSubtotal(Double.parseDouble(parts[3]));
@@ -76,12 +82,9 @@ public class OrderDAO {
                     parts[2],  // toyId
                     parts[3],  // toyName
                     Integer.parseInt(parts[4]),    // quantity
-                    Double.parseDouble(parts[5]),  // unitPrice
-                    Double.parseDouble(parts[6]),  // weight
-                    Boolean.parseBoolean(parts[7]), // isGiftWrapped
-                    parts[8]   // giftMessage
+                    Double.parseDouble(parts[5])   // unitPrice
                 );
-                item.setDiscount(Double.parseDouble(parts[9]));
+                item.setDiscount(Double.parseDouble(parts[8]));
                 
                 orderItems.computeIfAbsent(item.getOrderId(), k -> new ArrayList<>()).add(item);
                 Order order = orders.get(item.getOrderId());
@@ -95,11 +98,13 @@ public class OrderDAO {
     }
 
     private void saveOrders() {
+        System.out.println("OrderDAO.saveOrders called. Writing to: " + ORDERS_FILE);
         try (PrintWriter writer = new PrintWriter(new FileWriter(ORDERS_FILE))) {
             for (Order order : orders.values()) {
                 writer.println(order.toString());
             }
         } catch (IOException e) {
+            System.out.println("OrderDAO.saveOrders exception: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -153,6 +158,7 @@ public class OrderDAO {
     }
 
     public boolean addOrder(Order order) {
+        System.out.println("OrderDAO.addOrder called for order id: " + order.getId());
         if (getOrderById(order.getId()) != null) {
             return false;
         }

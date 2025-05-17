@@ -19,7 +19,7 @@ public class UserManagementServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        userDAO = new UserDAO();
+        userDAO = UserDAO.getInstance();
         gson = new Gson();
     }
 

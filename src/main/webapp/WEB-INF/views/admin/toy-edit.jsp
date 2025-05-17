@@ -1,159 +1,103 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Edit Toy - Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>${empty toy ? 'Add New Toy' : 'Edit Toy'}</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body>
-<%-- Reuse your existing navbar or dashboard header --%>
-<jsp:include page="/WEB-INF/views/admin/navbar.jsp" />
-
 <div class="container mt-4">
-    <h2>Edit Toy: ${editToy.name}</h2>
-    <form action="${pageContext.request.contextPath}/admin/toys/${editToy.id}" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="action" value="edit">
-
-        <div class="mb-3">
-            <label>Name</label>
-            <input class="form-control" type="text" name="name" value="${editToy.name}" required>
-        </div>
-        <div class="mb-3">
-            <label>Description</label>
-            <textarea class="form-control" name="description">${editToy.description}</textarea>
-        </div>
-        <div class="mb-3">
-            <label>Brand</label>
-            <input class="form-control" type="text" name="brand" value="${editToy.brand}">
-        </div>
-        <div class="mb-3">
-            <label>Category</label>
-            <input class="form-control" type="text" name="category" value="${editToy.category}">
-        </div>
-        <div class="mb-3">
-            <label>Age Range</label>
-            <input class="form-control" type="text" name="ageRange" value="${editToy.ageRange}">
-        </div>
-        <div class="mb-3">
-            <label>Price</label>
-            <input class="form-control" type="number" step="0.01" name="price" value="${editToy.price}">
-        </div>
-        <div class="mb-3">
-            <label>Stock Quantity</label>
-            <input class="form-control" type="number" name="stockQuantity" value="${editToy.stockQuantity}">
-        </div>
-        <div class="mb-3">
-            <label>Current Image</label>
-            <div class="mb-2">
-                <img src="${pageContext.request.contextPath}/images/${editToy.imageUrl}" 
-                     alt="${editToy.name}" 
-                     style="max-width: 200px; max-height: 200px;"
-                     id="currentImage">
+        <h2>${empty toy ? 'Add New Toy' : 'Edit Toy'}</h2>
+        
+        <c:if test="${not empty error}">
+            <div class="alert alert-danger" role="alert">
+                ${error}
             </div>
-            <div class="mb-2">
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="imageType" id="imageUpload" value="upload" checked>
-                    <label class="form-check-label" for="imageUpload">Upload New Image</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="imageType" id="imageUrl" value="url">
-                    <label class="form-check-label" for="imageUrl">Use Image URL</label>
-                </div>
+        </c:if>
+        
+        <c:if test="${not empty success}">
+            <div class="alert alert-success" role="alert">
+                ${success}
             </div>
-            <div id="uploadSection">
-                <input class="form-control" type="file" name="image" accept="image/*" onchange="previewImage(this)">
-                <div class="mt-2">
-                    <img id="imagePreview" style="max-width: 200px; max-height: 200px; display: none;">
-                </div>
-            </div>
-            <div id="urlSection" style="display: none;">
-                <input type="url" class="form-control" name="imageUrl" placeholder="Enter image URL">
-            </div>
+        </c:if>
+        
+        <form action="${pageContext.request.contextPath}/admin/toys/manage" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="${empty toy ? 'add' : 'update'}">
+            <input type="hidden" name="id" value="${toy.id}">
+            
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" value="${toy.name}" required>
         </div>
-        <div class="mb-3">
-            <label>Dimensions</label>
-            <input class="form-control" type="text" name="dimensions" value="${editToy.dimensions}">
+            
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required>${toy.description}</textarea>
         </div>
-        <div class="mb-3">
-            <label>Weight (kg)</label>
-            <input class="form-control" type="number" step="0.01" name="weight" value="${editToy.weight}">
+            
+            <div class="form-group">
+                <label for="brand">Brand:</label>
+                <input type="text" class="form-control" id="brand" name="brand" value="${toy.brand}" required>
         </div>
-        <div class="mb-3">
-            <label>Material</label>
-            <input class="form-control" type="text" name="material" value="${editToy.material}">
+            
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select class="form-control" id="category" name="category" required>
+                    <option value="">Select Category</option>
+                    <c:forEach var="cat" items="${categories}">
+                        <option value="${cat.name}" ${toy.category == cat.name ? 'selected' : ''}>${cat.name}</option>
+                    </c:forEach>
+                </select>
         </div>
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="requiresAssembly" id="requiresAssembly" ${editToy.requiresAssembly ? 'checked' : ''}>
-            <label class="form-check-label" for="requiresAssembly">Requires Assembly</label>
+            
+            <div class="form-group">
+                <label for="ageRange">Age Range:</label>
+                <select class="form-control" id="ageRange" name="ageRange" required>
+                    <option value="">Select Age Range</option>
+                    <option value="0-2" ${toy.ageRange == '0-2' ? 'selected' : ''}>0-2 years</option>
+                    <option value="3-5" ${toy.ageRange == '3-5' ? 'selected' : ''}>3-5 years</option>
+                    <option value="6-8" ${toy.ageRange == '6-8' ? 'selected' : ''}>6-8 years</option>
+                    <option value="9-11" ${toy.ageRange == '9-11' ? 'selected' : ''}>9-11 years</option>
+                    <option value="12+" ${toy.ageRange == '12+' ? 'selected' : ''}>12+ years</option>
+                </select>
         </div>
-        <div class="mb-3">
-            <label>Assembly Time (mins)</label>
-            <input class="form-control" type="number" name="assemblyTime" value="${editToy.assemblyTime}">
+            
+            <div class="form-group">
+                <label for="price">Price:</label>
+                <input type="number" class="form-control" id="price" name="price" value="${toy.price}" step="0.01" required>
         </div>
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="hasBatteries" id="hasBatteries" ${editToy.hasBatteries ? 'checked' : ''}>
-            <label class="form-check-label" for="hasBatteries">Has Batteries</label>
+            
+            <div class="form-group">
+                <label for="stockQuantity">Stock Quantity:</label>
+                <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" value="${toy.stockQuantity}" required>
         </div>
-        <div class="mb-3">
-            <label>Battery Type</label>
-            <input class="form-control" type="text" name="batteryType" value="${editToy.batteryType}">
+            
+            <div class="form-group">
+                <label for="image">Image:</label>
+                <input type="file" class="form-control" id="image" name="image" ${empty toy ? 'required' : ''}>
+                <c:if test="${not empty toy.imageUrl}">
+                    <img src="${pageContext.request.contextPath}/images/${toy.imageUrl}" alt="${toy.name}" class="img-thumbnail mt-2" style="max-width: 200px;">
+                </c:if>
         </div>
-        <div class="mb-3">
-            <label>Minimum Age</label>
-            <input class="form-control" type="number" name="minimumAge" value="${editToy.minimumAge}">
-        </div>
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="hasWarranty" id="hasWarranty" ${editToy.hasWarranty ? 'checked' : ''}>
-            <label class="form-check-label" for="hasWarranty">Has Warranty</label>
-        </div>
-        <div class="mb-3">
-            <label>Warranty (months)</label>
-            <input class="form-control" type="number" name="warrantyMonths" value="${editToy.warrantyMonths}">
+            
+            <div class="form-group">
+                <label for="isActive">Active:</label>
+                <select class="form-control" id="isActive" name="isActive">
+                    <option value="true" ${toy.active ? 'selected' : ''}>Yes</option>
+                    <option value="false" ${not toy.active ? 'selected' : ''}>No</option>
+                </select>
         </div>
 
-        <button type="submit" class="btn btn-success">Save Changes</button>
+            <button type="submit" class="btn btn-primary">${empty toy ? 'Add Toy' : 'Update Toy'}</button>
         <a href="${pageContext.request.contextPath}/admin/toys" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function previewImage(input) {
-    const preview = document.getElementById('imagePreview');
-    const currentImage = document.getElementById('currentImage');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            currentImage.style.display = 'none';
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.style.display = 'none';
-        currentImage.style.display = 'block';
-    }
-}
-
-// Handle image type selection
-document.querySelectorAll('input[name="imageType"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-        const uploadSection = document.getElementById('uploadSection');
-        const urlSection = document.getElementById('urlSection');
-        if (this.value === 'upload') {
-            uploadSection.style.display = 'block';
-            urlSection.style.display = 'none';
-        } else {
-            uploadSection.style.display = 'none';
-            urlSection.style.display = 'block';
-        }
-    });
-});
-</script>
+    <script src="${pageContext.request.contextPath}/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
