@@ -62,7 +62,6 @@ public class AdminUserServlet extends AdminBaseServlet {
                 return;
             }
             
-            // Handle user creation
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             String fullName = request.getParameter("fullName");
@@ -127,7 +126,6 @@ public class AdminUserServlet extends AdminBaseServlet {
             return;
         }
         
-        // Update user properties
         existingUser.setUsername(username);
         existingUser.setFullName(fullName);
         existingUser.setEmail(email);
@@ -135,7 +133,6 @@ public class AdminUserServlet extends AdminBaseServlet {
         existingUser.setAddress(address);
         existingUser.setActive(Boolean.parseBoolean(active));
         
-        // Only update password if provided
         if (password != null && !password.trim().isEmpty()) {
             existingUser.setPassword(password);
         }
