@@ -26,7 +26,7 @@ public class ToyManagementServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        toyDA = ToyDAO.getInstance();
+        toyDAO = ToyDAO.getInstance();
         gson = new Gson();
     }
 
