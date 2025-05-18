@@ -56,7 +56,6 @@ public abstract class User {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
-    // Abstract methods that child classes must implement
     public abstract boolean canManageUsers();
     public abstract boolean canManageProducts();
     public abstract boolean canViewReports();
