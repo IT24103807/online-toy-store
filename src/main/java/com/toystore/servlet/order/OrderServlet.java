@@ -14,17 +14,7 @@ import java.io.IOException;
 
 @WebServlet("/orders/*")
 public class OrderServlet extends HttpServlet {
-    public OrderServlet(OrderDAO orderDAO) {
-        this.orderDAO = orderDAO;
-    }
 
-    public OrderDAO getOrderDAO() {
-        return orderDAO;
-    }
-
-    public void setOrderDAO(OrderDAO orderDAO) {
-        this.orderDAO = orderDAO;
-    }
 
     private OrderDAO orderDAO;
 

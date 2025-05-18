@@ -28,6 +28,7 @@ public class AdminOrderServlet extends AdminBaseServlet {
     }
 
     @Override
+    //Read
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
@@ -57,6 +58,7 @@ public class AdminOrderServlet extends AdminBaseServlet {
     }
 
     @Override
+    //Update
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
