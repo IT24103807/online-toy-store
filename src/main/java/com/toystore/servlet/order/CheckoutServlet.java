@@ -36,7 +36,7 @@ public class CheckoutServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
-        
+
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -51,7 +51,7 @@ public class CheckoutServlet extends HttpServlet {
         // Calculate totals and prepare cart items
         List<Map<String, Object>> cartItems = new ArrayList<>();
         double subtotal = 0.0;
-        
+
         for (Map.Entry<String, Integer> entry : cart.entrySet()) {
             Toy toy = toyDAO.getToyById(entry.getKey());
             if (toy != null) {
@@ -65,7 +65,7 @@ public class CheckoutServlet extends HttpServlet {
             }
         }
 
-        // Calculate tax and shipping
+
         double tax = subtotal * 0.08; // 8% tax
         double shipping = 5.99; // Base shipping rate
         double total = subtotal + tax + shipping;
@@ -75,16 +75,17 @@ public class CheckoutServlet extends HttpServlet {
         request.setAttribute("tax", tax);
         request.setAttribute("shipping", shipping);
         request.setAttribute("total", total);
-        
+
         request.getRequestDispatcher("/WEB-INF/views/checkout.jsp").forward(request, response);
     }
 
     @Override
+    //Creat/Update
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
-        
+
         if (user == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -96,7 +97,7 @@ public class CheckoutServlet extends HttpServlet {
             return;
         }
 
-        // Parse JSON request body
+
         StringBuilder buffer = new StringBuilder();
         String line;
         while ((line = request.getReader().readLine()) != null) {
@@ -104,10 +105,10 @@ public class CheckoutServlet extends HttpServlet {
         }
         Map<String, Object> requestData = gson.fromJson(buffer.toString(), Map.class);
 
-        // Validate required fields
+
         String shippingAddress = (String) requestData.get("shippingAddress");
         String paymentMethod = (String) requestData.get("paymentMethod");
-        
+
         if (shippingAddress == null || shippingAddress.trim().isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Shipping address is required");
             return;
@@ -118,7 +119,7 @@ public class CheckoutServlet extends HttpServlet {
             return;
         }
 
-        // Validate credit card details if payment method is CREDIT_CARD
+
         if ("CREDIT_CARD".equals(paymentMethod)) {
             String cardNumber = (String) requestData.get("cardNumber");
             String expiryDate = (String) requestData.get("expiryDate");
@@ -142,25 +143,25 @@ public class CheckoutServlet extends HttpServlet {
 
         // Create new order
         Order order = new Order(
-            UUID.randomUUID().toString(),
-            user.getId(),
-            shippingAddress,
-            paymentMethod,
-            (String) requestData.get("couponCode")
+                UUID.randomUUID().toString(),
+                user.getId(),
+                shippingAddress,
+                paymentMethod,
+                (String) requestData.get("couponCode")
         );
 
         // Calculate totals
         double subtotal = 0.0;
         double tax = 0.0;
         double shipping = 5.99;
-        
+
         // Add items to order and update stock
         for (Map.Entry<String, Integer> entry : cart.entrySet()) {
             Toy toy = toyDAO.getToyById(entry.getKey());
             if (toy != null) {
                 if (toy.getStockQuantity() < entry.getValue()) {
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, 
-                        "Not enough stock for " + toy.getName());
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                            "Not enough stock for " + toy.getName());
                     return;
                 }
 
@@ -168,12 +169,12 @@ public class CheckoutServlet extends HttpServlet {
                 subtotal += itemPrice;
 
                 OrderItem item = new OrderItem(
-                    UUID.randomUUID().toString(),
-                    order.getId(),
-                    toy.getId(),
-                    toy.getName(),
-                    entry.getValue(),
-                    toy.getPrice()
+                        UUID.randomUUID().toString(),
+                        order.getId(),
+                        toy.getId(),
+                        toy.getName(),
+                        entry.getValue(),
+                        toy.getPrice()
                 );
                 order.addItem(item);
 
@@ -196,19 +197,19 @@ public class CheckoutServlet extends HttpServlet {
         if (orderDAO.addOrder(order)) {
             // Clear cart
             session.removeAttribute("cart");
-            
+
             // Return success response
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("orderId", order.getId());
             result.put("message", "Order placed successfully!");
-            
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(gson.toJson(result));
         } else {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
-                "Failed to place order");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Failed to place order");
         }
     }
 

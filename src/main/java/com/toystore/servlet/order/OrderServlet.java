@@ -14,6 +14,18 @@ import java.io.IOException;
 
 @WebServlet("/orders/*")
 public class OrderServlet extends HttpServlet {
+    public OrderServlet(OrderDAO orderDAO) {
+        this.orderDAO = orderDAO;
+    }
+
+    public OrderDAO getOrderDAO() {
+        return orderDAO;
+    }
+
+    public void setOrderDAO(OrderDAO orderDAO) {
+        this.orderDAO = orderDAO;
+    }
+
     private OrderDAO orderDAO;
 
     @Override
@@ -22,6 +34,7 @@ public class OrderServlet extends HttpServlet {
     }
 
     @Override
+    //Read
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
@@ -34,11 +47,11 @@ public class OrderServlet extends HttpServlet {
 
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            // List all orders for the user
+
             request.setAttribute("orders", orderDAO.getOrdersByUserId(user.getId()));
             request.getRequestDispatcher("/WEB-INF/views/orders/list.jsp").forward(request, response);
         } else {
-            // Get specific order
+
             String orderId = pathInfo.substring(1);
             Order order = orderDAO.getOrderById(orderId);
             
@@ -47,7 +60,7 @@ public class OrderServlet extends HttpServlet {
                 return;
             }
 
-            // Check if user has access to this order
+
             if (!user.getId().equals(order.getUserId()) && !"ADMIN".equals(session.getAttribute("role"))) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
                 return;
