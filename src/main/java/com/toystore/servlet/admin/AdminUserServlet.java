@@ -105,7 +105,6 @@ public class AdminUserServlet extends AdminBaseServlet {
             return;
         }
         
-        // Handle user update
         userId = userId.substring(1); // Remove leading slash
         User existingUser = userDAO.getUserById(userId);
         if (existingUser == null) {
