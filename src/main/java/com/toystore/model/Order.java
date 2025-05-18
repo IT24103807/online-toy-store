@@ -70,23 +70,17 @@ public class Order {
         this.items = items;
     }
 
-    public double getSubtotal() {
-        return subtotal;
-    }
+
     public void setSubtotal(double subtotal) {
         this.subtotal = subtotal;
     }
 
-    public double getTax() {
-        return tax;
-    }
+
     public void setTax(double tax) {
         this.tax = tax;
     }
 
-    public double getShippingCost() {
-        return shippingCost;
-    }
+
     public void setShippingCost(double shippingCost) {
         this.shippingCost = shippingCost;
     }
@@ -98,16 +92,12 @@ public class Order {
         this.totalAmount = totalAmount;
     }
 
-    public String getShippingAddress() {
-        return shippingAddress;
-    }
+
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
+
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
@@ -127,44 +117,30 @@ public class Order {
         this.orderDate = orderDate;
     }
 
-    public Date getLastModifiedDate() {
-        return lastModifiedDate;
-    }
+
     public void setLastModifiedDate(Date lastModifiedDate) {
         this.lastModifiedDate = lastModifiedDate;
     }
 
-    public String getTrackingNumber() {
-        return trackingNumber;
-    }
+
     public void setTrackingNumber(String trackingNumber) {
         this.trackingNumber = trackingNumber;
     }
 
-    public Date getEstimatedDeliveryDate() {
-        return estimatedDeliveryDate;
-    }
+
     public void setEstimatedDeliveryDate(Date estimatedDeliveryDate) {
         this.estimatedDeliveryDate = estimatedDeliveryDate;
     }
 
-    public int getLoyaltyPointsEarned() {
-        return loyaltyPointsEarned;
-    }
+
     public void setLoyaltyPointsEarned(int loyaltyPointsEarned) {
         this.loyaltyPointsEarned = loyaltyPointsEarned;
     }
 
-    public String getCouponCode() {
-        return couponCode;
-    }
-    public void setCouponCode(String couponCode) {
-        this.couponCode = couponCode;
-    }
 
-    public double getDiscountAmount() {
-        return discountAmount;
-    }
+
+
+
     public void setDiscountAmount(double discountAmount) {
         this.discountAmount = discountAmount;
     }
