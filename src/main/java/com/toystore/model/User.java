@@ -27,6 +27,12 @@ public abstract class User {
         this.active = true;
     }
 
+    public User(String username, String email, String avatarUrl) {
+        this.username = username;
+        this.email = email;
+        this.avatarUrl = avatarUrl;
+    }
+
     // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -56,7 +62,6 @@ public abstract class User {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
-    // Abstract methods that child classes must implement
     public abstract boolean canManageUsers();
     public abstract boolean canManageProducts();
     public abstract boolean canViewReports();
