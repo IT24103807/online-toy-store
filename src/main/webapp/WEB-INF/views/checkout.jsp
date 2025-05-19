@@ -39,7 +39,18 @@
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
+                        <c:choose>
+                            <c:when test="${sessionScope.role == 'ADMIN'}">
+                                <a class="nav-link" href="${pageContext.request.contextPath}/admin/dashboard.jsp">
+                                    <i class="fas fa-user-shield me-1"></i> Admin Dashboard
+                                </a>
+                            </c:when>
+                            <c:otherwise>
+                                <a class="nav-link" href="${pageContext.request.contextPath}/dashboard">
+                                    <i class="fas fa-user me-1"></i> Dashboard
+                                </a>
+                            </c:otherwise>
+                        </c:choose>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="${pageContext.request.contextPath}/logout">Logout</a>
