@@ -36,7 +36,7 @@ public class ToyImageUploadServlet extends HttpServlet {
         }
 
         try {
-            // Get the image file part
+            // Get image file
             Part filePart = request.getPart("image");
             String fileName = filePart.getSubmittedFileName();
             
@@ -44,13 +44,13 @@ public class ToyImageUploadServlet extends HttpServlet {
             String uniqueFileName = UUID.randomUUID().toString() + 
                                   fileName.substring(fileName.lastIndexOf("."));
             
-            // Save the file
+            // Save file
             File file = new File(uploadDir, uniqueFileName);
             try (InputStream input = filePart.getInputStream()) {
                 Files.copy(input, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
             
-            // Return the full path that should be used in the imageUrl field
+            // Return the full path that should be used in the im  b v bn age Url field
             // This will be used in the <img src=""> tag
             String imagePath = uniqueFileName;
             
