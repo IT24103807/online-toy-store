@@ -22,6 +22,15 @@ public class OrderItem {
         this.discount = 0.0;
     }
 
+
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+
+
+    }
+
     // Getters and Setters
     public String getId() {
         return id;

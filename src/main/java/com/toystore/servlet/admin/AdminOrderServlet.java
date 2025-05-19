@@ -28,6 +28,7 @@ public class AdminOrderServlet extends AdminBaseServlet {
     }
 
     @Override
+    //Read-Retrieves all orders or a specific order for viewing by an admin.
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
@@ -57,6 +58,7 @@ public class AdminOrderServlet extends AdminBaseServlet {
     }
 
     @Override
+    //Update-Updates the status of an order (eg-from "Pending" to "Shipped")
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
