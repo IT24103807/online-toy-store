@@ -18,10 +18,6 @@ public class OrderServlet extends HttpServlet {
 
     private OrderDAO orderDAO;
 
-    @Override
-    public void init() throws ServletException {
-        orderDAO = OrderDAO.getInstance();
-    }
 
     @Override
     //Read
