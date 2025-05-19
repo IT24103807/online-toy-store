@@ -1,6 +1,5 @@
 package com.toystore.dao;
 
-import com.toystore.model.Review;
 import java.io.*;
 import java.util.*;
 import java.text.SimpleDateFormat;
