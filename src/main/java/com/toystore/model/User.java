@@ -27,6 +27,12 @@ public abstract class User {
         this.active = true;
     }
 
+    public User(String username, String email, String avatarUrl) {
+        this.username = username;
+        this.email = email;
+        this.avatarUrl = avatarUrl;
+    }
+
     // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
